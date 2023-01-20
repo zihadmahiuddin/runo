@@ -1,0 +1,9 @@
+[workspace]
+members = [
+  "runo",
+  "unord",
+  "util",
+  "util-macros",
+  "xtask"
+]
+
