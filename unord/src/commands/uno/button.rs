@@ -381,20 +381,20 @@ struct CardSelectMenu<T, F> {
     f_marker: PhantomData<F>,
 }
 
-impl<'a, T, F> CardSelectMenu<T, F>
-where
-    T: FromStr,
-    F: FnOnce(
-        &'a mut CreateInteractionResponseData<'a>,
-    ) -> &'a mut CreateInteractionResponseData<'a>,
-{
+impl<T, F> CardSelectMenu<T, F> {
     const SELECT_MENU_ID: &str = "select_card_to_play";
 
-    async fn wait_for_selection(
+    async fn wait_for_selection<'a, Fn>(
         ctx: &Context,
         interaction: &MessageComponentInteraction,
-        f: F,
-    ) -> T {
+        f: Fn,
+    ) -> T
+    where
+        for<'b> Fn: FnOnce(
+            &'b mut CreateInteractionResponseData<'a>,
+        ) -> &'b mut CreateInteractionResponseData<'a>,
+        T: FromStr,
+    {
         interaction
             .create_interaction_response(ctx, |ir| {
                 ir.kind(InteractionResponseType::ChannelMessageWithSource)
