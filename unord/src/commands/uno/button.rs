@@ -1,17 +1,18 @@
-use std::{marker::PhantomData, str::FromStr, time::Duration};
+use std::{str::FromStr, time::Duration};
 
+use color_eyre::Result;
 use convert_case::{Case, Converter};
 use poise::{
+    async_trait,
     serenity_prelude::{
-        ButtonStyle, ChannelId, CollectComponentInteraction, ComponentType, Context,
-        CreateComponents, CreateInteractionResponse, CreateInteractionResponseData, Interaction,
-        InteractionResponseType, MessageComponentInteraction, ReactionType,
+        ButtonStyle, CollectComponentInteraction, ComponentType, Context, CreateComponents,
+        CreateInteractionResponseData, Interaction, InteractionResponseType,
+        MessageComponentInteraction, ReactionType, ShardMessenger,
     },
     Event,
 };
 use runo::{
-    card::{Card, CardColor},
-    player::Player,
+    card::{Card, CardColor, ColoredCard},
     turn::{PlayAction, TurnAction},
 };
 use strum::{EnumCount, IntoEnumIterator};
@@ -375,102 +376,146 @@ impl UnoButton {
     }
 }
 
-struct CardSelectMenu<T, F> {
-    t_marker: PhantomData<T>,
-    f_marker: PhantomData<F>,
-}
+#[async_trait]
+trait SelectMenu<T>: Sized + Sync
+where
+    T: From<String>,
+{
+    fn custom_id() -> String;
 
-impl<T, F> CardSelectMenu<T, F> {
-    const SELECT_MENU_ID: &str = "select_card_to_play";
+    fn create_interaction_response_data<'a>(
+        &self,
+        _ctx: &Context,
+        _ird: &'a mut CreateInteractionResponseData,
+    );
 
-    async fn wait_for_selection<'a, Fn>(
+    fn create_collect_component_interaction(
+        &self,
+        _shard: impl AsRef<ShardMessenger>,
+        _interaction: &MessageComponentInteraction,
+    ) -> CollectComponentInteraction;
+
+    async fn await_selection<'a, Fn>(
+        self,
         ctx: &Context,
         interaction: &MessageComponentInteraction,
-        f: Fn,
-    ) -> T
-    where
-        for<'b> Fn: FnOnce(
-            &'b mut CreateInteractionResponseData<'a>,
-        ) -> &'b mut CreateInteractionResponseData<'a>,
-        T: FromStr,
-    {
+    ) -> Result<Option<T>> {
         interaction
             .create_interaction_response(ctx, |ir| {
                 ir.kind(InteractionResponseType::ChannelMessageWithSource)
                     .interaction_response_data(|ird| {
-                        f(ird)
-                            .content("Select the card you want to play.")
-                            .components(|c| {
-                                c.create_action_row(|ar| {
-                                    ar.create_select_menu(|sm| {
-                                        sm.custom_id(Self::SELECT_MENU_ID)
-                                            .min_values(1)
-                                            .max_values(1)
-                                            .options(|o| {
-                                                // for (index, card) in player.hand.iter().enumerate()
-                                                // {
-                                                //     o.create_option(|o| {
-                                                //         o.label(card.to_string())
-                                                //             .value(index)
-                                                //             .emoji(card.as_emoji())
-                                                //     });
-                                                // }
-                                                o
-                                            })
-                                    })
-                                })
-                            })
-                            .ephemeral(true)
+                        self.create_interaction_response_data(ctx, ird);
+                        ird
                     })
             })
-            .await
-            .unwrap();
+            .await?;
 
-        // let cards_count = player.cards_count();
+        let collect_component_interaction =
+            self.create_collect_component_interaction(ctx, interaction);
+        let select_interaction = collect_component_interaction.await;
 
-        // let m = interaction.get_interaction_response(ctx).await.unwrap();
-        //
-        // let select_interaction = m
-        //     .await_component_interaction(&ctx)
-        //     .timeout(Duration::from_secs(60))
-        //     .author_id(interaction.user.id)
-        //     .channel_id(interaction.channel_id)
-        //     .collect_limit(1)
-        //     .filter(move |select_menu_interaction| {
-        //         if select_menu_interaction.data.custom_id == Self::SELECT_MENU_ID {
-        //             if let Some(first_value) = select_menu_interaction.data.values.first() {
-        //                 let first_value_usize = first_value
-        //                     .parse::<usize>()
-        //                     .expect("It should always be a valid index...");
-        //                 first_value_usize <= cards_count - 1
-        //             } else {
-        //                 false
-        //             }
-        //         } else {
-        //             false
-        //         }
-        //     })
-        //     .await
-        //     .unwrap();
+        match select_interaction {
+            Some(select_interaction) => {
+                if select_interaction.data.custom_id != Self::custom_id() {
+                    return Ok(None);
+                }
 
-        // let chosen_card = {
-        //     if let Some(first_value) = select_interaction.data.values.first() {
-        //         player
-        //             .hand
-        //             .iter()
-        //             .skip(first_value.parse::<usize>().expect(
-        //                 "It should always be a valid index since we only sent that before.",
-        //             ))
-        //             .next()
-        //     } else {
-        //         None
-        //     }
-        // };
-        todo!()
+                match select_interaction.data.values.first() {
+                    Some(value) => Ok(Some(value.clone().into())),
+                    None => Ok(None),
+                }
+            }
+            None => Ok(None),
+        }
     }
 }
 
-struct ColorSelectMenu;
+struct CardWrapper(Card);
+
+impl From<String> for CardWrapper {
+    fn from(value: String) -> Self {
+        let split = value.splitn(1, " ").collect::<Vec<_>>();
+        let kind = split[0];
+
+        if kind.starts_with("Wild") {
+            if kind == "Wild Draw" {
+                return Self(Card::WildDraw);
+            }
+            return Self(Card::Wild);
+        }
+
+        match CardColor::from_str(kind) {
+            Ok(color) => {
+                let kind = split[1];
+                if kind.starts_with("Draw") {
+                    return Self(Card::Colored(color, ColoredCard::Draw));
+                }
+
+                match kind {
+                    "Skip" => Self(Card::Colored(color, ColoredCard::Skip)),
+                    "Reverse" => Self(Card::Colored(color, ColoredCard::Reverse)),
+                    _ => Self(Card::Colored(
+                        color,
+                        ColoredCard::Number(kind.parse().unwrap()),
+                    )),
+                }
+            }
+            Err(_) => unreachable!(),
+        }
+    }
+}
+
+struct CardSelectMenu(Vec<Card>);
+
+#[async_trait]
+impl SelectMenu<CardWrapper> for CardSelectMenu {
+    fn custom_id() -> String {
+        format!("select_card_to_play")
+    }
+
+    fn create_interaction_response_data<'a>(
+        &self,
+        _ctx: &Context,
+        ird: &'a mut CreateInteractionResponseData,
+    ) {
+        ird.content("Select the card you want to play.")
+            .components(|c| {
+                c.create_action_row(|ar| {
+                    ar.create_select_menu(|sm| {
+                        sm.custom_id(Self::custom_id())
+                            .min_values(1)
+                            .max_values(1)
+                            .options(|o| {
+                                for (index, card) in self.0.iter().enumerate() {
+                                    o.create_option(|o| {
+                                        o.label(card.to_string())
+                                            .value(index)
+                                            .emoji(card.as_emoji())
+                                    });
+                                }
+                                o
+                            })
+                    })
+                })
+            })
+            .ephemeral(true);
+    }
+
+    fn create_collect_component_interaction(
+        &self,
+        shard: impl AsRef<ShardMessenger>,
+        interaction: &MessageComponentInteraction,
+    ) -> CollectComponentInteraction {
+        CollectComponentInteraction::new(shard.as_ref())
+            .timeout(Duration::from_secs(60))
+            .author_id(interaction.user.id)
+            .channel_id(interaction.channel_id)
+            .collect_limit(1)
+            .filter(move |select_menu_interaction| {
+                select_menu_interaction.data.custom_id == Self::custom_id()
+            })
+    }
+}
 
 trait AsEmoji {
     fn as_emoji(&self) -> ReactionType;

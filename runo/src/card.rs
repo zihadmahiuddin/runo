@@ -11,7 +11,7 @@ pub enum CardColor {
     Yellow,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Display, PartialEq, Eq)]
 pub enum ColoredCard {
     Number(u8),
     Skip,

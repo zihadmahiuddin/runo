@@ -17,3 +17,4 @@ strum_macros = "0.24.3"
 util = { path = "../util" }
 util-macros = { path = "../util-macros" }
 convert_case = "0.6.0"
+color-eyre = "0.6.2"
