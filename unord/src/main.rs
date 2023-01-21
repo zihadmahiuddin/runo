@@ -30,11 +30,9 @@ impl UnoGame {
     pub fn get_player_ids(&self) -> HashSet<UserId> {
         match self {
             UnoGame::Pending { queued_users, .. } => queued_users.keys().cloned().collect(),
-            UnoGame::Ongoing { game, .. } => game
-                .get_player_ids()
-                .into_iter()
-                .map(|x| UserId(x))
-                .collect(),
+            UnoGame::Ongoing { game, .. } => {
+                game.get_player_ids().into_iter().map(UserId).collect()
+            }
         }
     }
 
@@ -47,7 +45,7 @@ impl UnoGame {
             } => {
                 match Uno::new_with_ids(
                     queued_users
-                        .into_iter()
+                        .iter_mut()
                         .map(|(k, v)| (k.0, v.clone()))
                         .collect(),
                 ) {
@@ -77,13 +75,13 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     // They are many errors that can occur, so we only handle the ones we want to customize
     // and forward the rest to the default handler
     match error {
-        poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
+        poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {error:?}"),
         poise::FrameworkError::Command { error, ctx } => {
             println!("Error in command `{}`: {:?}", ctx.command().name, error,);
         }
         error => {
             if let Err(e) = poise::builtins::on_error(error).await {
-                println!("Error while handling error: {}", e)
+                println!("Error while handling error: {e}")
             }
         }
     }

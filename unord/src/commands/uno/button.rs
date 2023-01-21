@@ -20,6 +20,7 @@ use strum_macros::{Display, EnumIter, EnumString};
 use crate::{Data, UnoGame};
 
 #[derive(Debug, Display, EnumString, EnumIter)]
+#[allow(clippy::upper_case_acronyms)]
 enum UnoButtonType {
     PlayCard,
     ViewHand,
@@ -33,14 +34,14 @@ impl UnoButtonType {
         let converter = Converter::new()
             .from_case(Case::Pascal)
             .to_case(Case::Snake);
-        converter.convert(format!("{}", self))
+        converter.convert(format!("{self}"))
     }
 
     fn label(&self) -> String {
         let converter = Converter::new()
             .from_case(Case::Pascal)
             .to_case(Case::Title);
-        converter.convert(format!("{}", self))
+        converter.convert(format!("{self}"))
     }
 }
 
@@ -76,48 +77,49 @@ impl UnoButton {
         };
 
         match button_type {
-            UnoButtonType::PlayCard => match game {
-                UnoGame::Ongoing { game, .. } => {
-                    let Some(player) = game.get_player(&interaction.user.id.0) else {
+            UnoButtonType::PlayCard => {
+                match game {
+                    UnoGame::Ongoing { game, .. } => {
+                        let Some(player) = game.get_player(&interaction.user.id.0) else {
                         return;
                     };
 
-                    interaction
-                        .create_interaction_response(ctx, |ir| {
-                            ir.kind(InteractionResponseType::ChannelMessageWithSource)
-                                .interaction_response_data(|ird| {
-                                    ird.content("Select the card you want to play.")
-                                        .components(|c| {
-                                            c.create_action_row(|ar| {
-                                                ar.create_select_menu(|sm| {
-                                                    sm.custom_id("select_card_to_play")
-                                                        .min_values(1)
-                                                        .max_values(1)
-                                                        .options(|o| {
-                                                            for (index, card) in
-                                                                player.hand.iter().enumerate()
-                                                            {
-                                                                o.create_option(|o| {
-                                                                    o.label(card.to_string())
-                                                                        .value(index)
-                                                                        .emoji(card.as_emoji())
-                                                                });
-                                                            }
-                                                            o
-                                                        })
+                        interaction
+                            .create_interaction_response(ctx, |ir| {
+                                ir.kind(InteractionResponseType::ChannelMessageWithSource)
+                                    .interaction_response_data(|ird| {
+                                        ird.content("Select the card you want to play.")
+                                            .components(|c| {
+                                                c.create_action_row(|ar| {
+                                                    ar.create_select_menu(|sm| {
+                                                        sm.custom_id("select_card_to_play")
+                                                            .min_values(1)
+                                                            .max_values(1)
+                                                            .options(|o| {
+                                                                for (index, card) in
+                                                                    player.hand.iter().enumerate()
+                                                                {
+                                                                    o.create_option(|o| {
+                                                                        o.label(card.to_string())
+                                                                            .value(index)
+                                                                            .emoji(card.as_emoji())
+                                                                    });
+                                                                }
+                                                                o
+                                                            })
+                                                    })
                                                 })
                                             })
-                                        })
-                                        .ephemeral(true)
-                                })
-                        })
-                        .await
-                        .unwrap();
+                                            .ephemeral(true)
+                                    })
+                            })
+                            .await
+                            .unwrap();
 
-                    let player_cards = player.hand.clone();
-                    let cards_count = player.cards_count();
+                        let player_cards = player.hand.clone();
+                        let cards_count = player.cards_count();
 
-                    let Some(interaction) = CollectComponentInteraction::new(&ctx.shard)
+                        let Some(interaction) = CollectComponentInteraction::new(&ctx.shard)
                         .timeout(Duration::from_secs(10))
                         .author_id(interaction.user.id)
                         .channel_id(interaction.channel_id)
@@ -132,7 +134,7 @@ impl UnoButton {
                                     let first_value_usize = first_value
                                         .parse::<usize>()
                                         .expect("It should always be a valid index...");
-                                    first_value_usize <= cards_count - 1
+                                    first_value_usize < cards_count
                                 } else {
                                     false
                                 }
@@ -143,43 +145,39 @@ impl UnoButton {
                         return
                     };
 
-                    dbg!(&interaction);
+                        dbg!(&interaction);
 
-                    let chosen_card = {
-                        if let Some(first_value) = interaction.data.values.first() {
-                            Some(&player_cards[first_value.parse::<usize>().expect("It should always be a valid index since we only sent that before.")])
-                        } else {
-                            None
-                        }
-                    };
+                        let chosen_card = {
+                            interaction.data.values.first().map(|first_value| &player_cards[first_value.parse::<usize>().expect("It should always be a valid index since we only sent that before.")])
+                        };
 
-                    let Some(chosen_card) = chosen_card else {
+                        let Some(chosen_card) = chosen_card else {
                         return
                     };
 
-                    match chosen_card {
-                        Card::Colored(_, _) => {
-                            let result = game.play_turn(TurnAction::Play(PlayAction::ColoredCard(
-                                chosen_card.clone(),
-                            )));
-                            interaction
-                                .create_interaction_response(ctx, |ir| {
-                                    ir.kind(InteractionResponseType::ChannelMessageWithSource)
-                                        .interaction_response_data(|ird| {
-                                            ird.content(format!(
-                                                "You chose: {}, result: {:?}, win: {}",
-                                                chosen_card, result.0, result.1
-                                            ))
-                                            .ephemeral(true)
-                                        })
-                                })
-                                .await
-                                .unwrap();
-                        }
-                        _ => {
-                            let colors = CardColor::iter().collect::<Vec<_>>();
+                        match chosen_card {
+                            Card::Colored(_, _) => {
+                                let result = game.play_turn(TurnAction::Play(
+                                    PlayAction::ColoredCard(chosen_card.clone()),
+                                ));
+                                interaction
+                                    .create_interaction_response(ctx, |ir| {
+                                        ir.kind(InteractionResponseType::ChannelMessageWithSource)
+                                            .interaction_response_data(|ird| {
+                                                ird.content(format!(
+                                                    "You chose: {}, result: {:?}, win: {}",
+                                                    chosen_card, result.0, result.1
+                                                ))
+                                                .ephemeral(true)
+                                            })
+                                    })
+                                    .await
+                                    .unwrap();
+                            }
+                            _ => {
+                                let colors = CardColor::iter().collect::<Vec<_>>();
 
-                            interaction
+                                interaction
                                 .create_interaction_response(ctx, |ir| {
                                     ir.kind(InteractionResponseType::ChannelMessageWithSource)
                                         .interaction_response_data(|ird| {
@@ -198,7 +196,7 @@ impl UnoButton {
                                                                     {
                                                                         o.create_option(|o| {
                                                                             o.label(
-                                                                                format!("{}", color),
+                                                                                format!("{color}"),
                                                                             )
                                                                             .value(index)
                                                                             .emoji(color.as_emoji())
@@ -214,7 +212,7 @@ impl UnoButton {
                                 .await
                                 .unwrap();
 
-                            let Some(interaction) = CollectComponentInteraction::new(&ctx.shard)
+                                let Some(interaction) = CollectComponentInteraction::new(&ctx.shard)
                                 .timeout(Duration::from_secs(10))
                                 .author_id(interaction.user.id)
                                 .channel_id(interaction.channel_id)
@@ -229,7 +227,7 @@ impl UnoButton {
                                             let first_value_usize = first_value
                                                 .parse::<usize>()
                                                 .expect("It should always be a valid index...");
-                                            first_value_usize <= CardColor::COUNT - 1
+                                            first_value_usize < CardColor::COUNT
                                         } else {
                                             false
                                         }
@@ -240,39 +238,40 @@ impl UnoButton {
                                 return
                             };
 
-                            let Some(first_value) = interaction.data.values.first() else {
+                                let Some(first_value) = interaction.data.values.first() else {
                                 return
                             };
-                            let index = first_value
-                                .parse::<usize>()
-                                .expect("It should always be a valid index...");
-                            let color = &colors[index];
+                                let index = first_value
+                                    .parse::<usize>()
+                                    .expect("It should always be a valid index...");
+                                let color = &colors[index];
 
-                            let play_action = match chosen_card {
-                                Card::Colored(_, _) => unreachable!(),
-                                Card::Wild => PlayAction::WildDraw(color.clone()),
-                                Card::WildDraw => PlayAction::WildDraw(color.clone()),
-                            };
+                                let play_action = match chosen_card {
+                                    Card::Colored(_, _) => unreachable!(),
+                                    Card::Wild => PlayAction::WildDraw(color.clone()),
+                                    Card::WildDraw => PlayAction::WildDraw(color.clone()),
+                                };
 
-                            let result = game.play_turn(TurnAction::Play(play_action));
-                            interaction
-                                .create_interaction_response(ctx, |ir| {
-                                    ir.kind(InteractionResponseType::ChannelMessageWithSource)
-                                        .interaction_response_data(|ird| {
-                                            ird.content(format!(
-                                                "You chose: {}, result: {:?}, win: {}",
-                                                chosen_card, result.0, result.1
-                                            ))
-                                            .ephemeral(true)
-                                        })
-                                })
-                                .await
-                                .unwrap();
+                                let result = game.play_turn(TurnAction::Play(play_action));
+                                interaction
+                                    .create_interaction_response(ctx, |ir| {
+                                        ir.kind(InteractionResponseType::ChannelMessageWithSource)
+                                            .interaction_response_data(|ird| {
+                                                ird.content(format!(
+                                                    "You chose: {}, result: {:?}, win: {}",
+                                                    chosen_card, result.0, result.1
+                                                ))
+                                                .ephemeral(true)
+                                            })
+                                    })
+                                    .await
+                                    .unwrap();
+                            }
                         }
                     }
+                    UnoGame::Pending { .. } => todo!(),
                 }
-                UnoGame::Pending { .. } => todo!(),
-            },
+            }
             UnoButtonType::ViewHand => match game {
                 UnoGame::Ongoing { game, .. } => {
                     let Some(player) = game.get_player(&interaction.user.id.0) else {
@@ -290,7 +289,7 @@ impl UnoButton {
                         .create_interaction_response(ctx, |ir| {
                             ir.kind(InteractionResponseType::ChannelMessageWithSource)
                                 .interaction_response_data(|ird| {
-                                    ird.content(format!("Your hand: {}.", cards_string))
+                                    ird.content(format!("Your hand: {cards_string}."))
                                         .ephemeral(true)
                                 })
                         })

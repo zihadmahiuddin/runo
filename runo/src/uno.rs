@@ -26,8 +26,8 @@ impl Uno {
         for player_name in player_names {
             loop {
                 let id = rng.gen();
-                if !players_info.contains_key(&id) {
-                    players_info.insert(id, player_name);
+                if let std::collections::btree_map::Entry::Vacant(e) = players_info.entry(id) {
+                    e.insert(player_name);
                     break;
                 }
             }
@@ -57,7 +57,7 @@ impl Uno {
 
         let winners = Vec::with_capacity(players.len());
 
-        let _player_ids = players.keys().map(|x| *x).collect::<Vec<_>>();
+        let _player_ids = players.keys().copied().collect::<Vec<_>>();
         // let current_turn_player_id_index = thread_rng().gen_range(0..player_ids.len());
         let current_turn_player_id_index = 0;
 
@@ -176,7 +176,7 @@ impl Uno {
     }
 
     pub fn get_player_ids(&self) -> Vec<u64> {
-        self.players.keys().map(|x| *x).collect()
+        self.players.keys().copied().collect()
     }
 
     pub fn get_player(&self, player_id: &u64) -> Option<&Player> {
@@ -243,7 +243,7 @@ impl Uno {
             }
         }
 
-        return called_out_player_ids;
+        called_out_player_ids
     }
 
     fn perform_uno(&mut self) -> bool {
@@ -268,7 +268,7 @@ impl Uno {
         } else {
             keys_iter.collect()
         };
-        return player_ids;
+        player_ids
     }
 
     fn get_nth_turn_player_id(&self, n: usize) -> u64 {
@@ -276,8 +276,7 @@ impl Uno {
         return **player_ids
             .iter()
             .cycle()
-            .skip(self.current_turn_player_id_index + n)
-            .next()
+            .nth(self.current_turn_player_id_index + n)
             .expect("Cycle always returns something...right?");
     }
 
@@ -289,12 +288,10 @@ impl Uno {
                 } else {
                     self.current_turn_player_id_index - 1
                 }
+            } else if self.current_turn_player_id_index == self.players.len() - 1 {
+                0
             } else {
-                if self.current_turn_player_id_index == self.players.len() - 1 {
-                    0
-                } else {
-                    self.current_turn_player_id_index + 1
-                }
+                self.current_turn_player_id_index + 1
             };
         }
     }
@@ -318,7 +315,7 @@ mod tests {
         for i in 0..count {
             player_names.push(format!("Player {}", i + 1));
         }
-        return player_names;
+        player_names
     }
 
     fn create_players_info(count: usize) -> BTreeMap<u64, String> {
@@ -326,7 +323,7 @@ mod tests {
         for i in 0..count {
             players_info.insert(i as u64, format!("Player {}", i + 1));
         }
-        return players_info;
+        players_info
     }
 
     #[test]

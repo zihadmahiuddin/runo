@@ -47,7 +47,7 @@ impl Deck {
         Self(cards)
     }
 
-    pub(crate) fn shuffle(&mut self) -> () {
+    pub(crate) fn shuffle(&mut self) {
         let mut rng = thread_rng();
         self.0.shuffle(&mut rng);
     }
@@ -64,7 +64,13 @@ impl Deck {
     }
 
     pub(crate) fn cards_count(&self) -> usize {
-        return self.0.len();
+        self.0.len()
+    }
+}
+
+impl Default for Deck {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

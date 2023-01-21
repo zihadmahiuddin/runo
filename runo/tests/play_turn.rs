@@ -11,7 +11,7 @@ fn create_player_names(count: usize) -> Vec<String> {
     for i in 0..count {
         player_names.push(format!("Player {}", i + 1));
     }
-    return player_names;
+    player_names
 }
 
 fn create_players_info(count: usize) -> BTreeMap<u64, String> {
@@ -19,7 +19,7 @@ fn create_players_info(count: usize) -> BTreeMap<u64, String> {
     for i in 0..count {
         players_info.insert(i as u64, format!("Player {}", i + 1));
     }
-    return players_info;
+    players_info
 }
 
 #[test]

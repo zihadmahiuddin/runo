@@ -31,8 +31,7 @@ pub async fn create(ctx: Context<'_>) -> Result<(), Error> {
                 m.reply(true)
                     .content(
                         format!(
-                            "There is already a pending match in this channel, try `/uno join` first. The following users are in the match now:\n{}",
-                            players
+                            "There is already a pending match in this channel, try `/uno join` first. The following users are in the match now:\n{players}"
                         )
                     )
             })
@@ -44,8 +43,7 @@ pub async fn create(ctx: Context<'_>) -> Result<(), Error> {
                 m.reply(true)
                     .content(
                         format!(
-                            "You are already in the pending match in this channel, wait for it to start. The following users are in the match:\n{}",
-                            players
+                            "You are already in the pending match in this channel, wait for it to start. The following users are in the match:\n{players}"
                         )
                     )
             })
@@ -55,7 +53,7 @@ pub async fn create(ctx: Context<'_>) -> Result<(), Error> {
             let players = join_player_list_to_string(player_ids.iter());
             ctx.send(|m| {
                 m.reply(true).content(format!(
-                    "There is already an ongoing match in this channel with the following users:\n{}", players
+                    "There is already an ongoing match in this channel with the following users:\n{players}"
                 ))
             })
             .await?;
@@ -84,8 +82,7 @@ pub async fn join(ctx: Context<'_>) -> Result<(), Error> {
                 m.reply(true)
                     .content(
                         format!(
-                            "You are already in the pending match in this channel, wait for it to start. The following users are in the match:\n{}",
-                            players
+                            "You are already in the pending match in this channel, wait for it to start. The following users are in the match:\n{players}"
                         )
                     )
             })
@@ -97,8 +94,7 @@ pub async fn join(ctx: Context<'_>) -> Result<(), Error> {
                 m.reply(true)
                     .content(
                         format!(
-                            "You have been added to the pending match in this channel. The following users are in the match now:\n{}",
-                            players
+                            "You have been added to the pending match in this channel. The following users are in the match now:\n{players}"
                         )
                     )
             })
@@ -108,7 +104,7 @@ pub async fn join(ctx: Context<'_>) -> Result<(), Error> {
             let players = join_player_list_to_string(player_ids.iter());
             ctx.send(|m| {
                 m.reply(true).content(format!(
-                    "There is already an ongoing match in this channel with the following users:\n{}", players
+                    "There is already an ongoing match in this channel with the following users:\n{players}"
                 ))
             })
             .await?;
@@ -128,8 +124,7 @@ pub async fn start(ctx: Context<'_>) -> Result<(), Error> {
             let players = join_player_list_to_string(player_ids.iter());
             ctx.send(|m| {
                 m.reply(true).content(format!(
-                    "A match is already running in this channel with the following users:\n{}",
-                    players
+                    "A match is already running in this channel with the following users:\n{players}"
                 ))
             })
             .await?;
@@ -160,7 +155,7 @@ pub async fn start(ctx: Context<'_>) -> Result<(), Error> {
         StartMatchResult::UnoError(uno_error) => {
             ctx.send(|m| {
                 m.reply(true)
-                    .content(format!("Failed to start match: {}", uno_error))
+                    .content(format!("Failed to start match: {uno_error}"))
             })
             .await?;
         }
@@ -226,11 +221,13 @@ async fn join_match(ctx: Context<'_>) -> JoinMatchResult {
     if let Some(existing_match) = hash_map.get_mut(&ctx.channel_id()) {
         match existing_match {
             UnoGame::Pending { queued_users, .. } => {
-                if queued_users.contains_key(&ctx.author().id) {
-                    JoinMatchResult::AlreadyJoined(existing_match.get_player_ids())
-                } else {
-                    queued_users.insert(ctx.author().id, ctx.author().tag());
+                if let std::collections::btree_map::Entry::Vacant(e) =
+                    queued_users.entry(ctx.author().id)
+                {
+                    e.insert(ctx.author().tag());
                     JoinMatchResult::Joined(existing_match.get_player_ids())
+                } else {
+                    JoinMatchResult::AlreadyJoined(existing_match.get_player_ids())
                 }
             }
             UnoGame::Ongoing { .. } => {
@@ -269,7 +266,7 @@ async fn start_match(ctx: Context<'_>) -> StartMatchResult {
 
 fn join_player_list_to_string<'a>(player_list_iter: impl Iterator<Item = &'a UserId>) -> String {
     player_list_iter
-        .map(|id| format!("<@{}>", id))
+        .map(|id| format!("<@{id}>"))
         .collect::<Vec<_>>()
         .join("\n")
 }
