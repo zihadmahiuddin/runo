@@ -152,9 +152,10 @@ async fn handle_play_card(
             let colors = CardColor::iter().collect::<Vec<_>>();
 
             let mut color_select_menu = ColorSelectMenu::new(&colors);
-            color_select_menu
+            let interaction = color_select_menu
                 .await_selection(ctx, &interaction)
                 .await
+                .unwrap()
                 .unwrap();
             let color = color_select_menu.get_selection().unwrap();
 
