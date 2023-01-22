@@ -152,7 +152,7 @@ pub async fn start(ctx: Context<'_>) -> Result<(), Error> {
             ctx.send(|m| {
                 m.reply(true)
                     .content("Match started! Nothing else will happen yet tho...or will it?")
-                    .components(|c| UnoButton::create_action_row(c))
+                    .components(|c| UnoButton::create_components(c))
             })
             .await?;
         }

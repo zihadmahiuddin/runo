@@ -41,7 +41,7 @@ impl UnoButton {
             .to_case(Case::Title);
         converter.convert(format!("{self}"))
     }
-    pub fn create_action_row(c: &mut CreateComponents) -> &mut CreateComponents {
+    pub fn create_components(c: &mut CreateComponents) -> &mut CreateComponents {
         c.create_action_row(|ar| {
             for (index, variant) in Self::iter().enumerate() {
                 ar.create_button(|b| {
