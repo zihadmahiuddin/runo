@@ -119,11 +119,8 @@ async fn handle_play_card(
             let delete_original_response = interaction.delete_original_interaction_response(ctx);
 
             let create_followup_message = interaction.create_followup_message(ctx, |irf| {
-                irf.content(format!(
-                    "You chose: {}, result: {:?}, win: {}",
-                    chosen_card, result.0, result.1
-                ))
-                .ephemeral(true)
+                irf.content(format!("You chose: {}, result: {:?}", chosen_card, result))
+                    .ephemeral(true)
             });
 
             let (delete_original_response, create_followup_message) =
@@ -152,11 +149,8 @@ async fn handle_play_card(
                 .create_interaction_response(ctx, |ir| {
                     ir.kind(InteractionResponseType::ChannelMessageWithSource)
                         .interaction_response_data(|ird| {
-                            ird.content(format!(
-                                "You chose: {}, result: {:?}, win: {}",
-                                chosen_card, result.0, result.1
-                            ))
-                            .ephemeral(true)
+                            ird.content(format!("You chose: {}, result: {:?}", chosen_card, result))
+                                .ephemeral(true)
                         })
                 })
                 .await
@@ -195,11 +189,8 @@ async fn handle_draw(ctx: &Context, interaction: &MessageComponentInteraction, g
         .create_interaction_response(ctx, |ir| {
             ir.kind(InteractionResponseType::ChannelMessageWithSource)
                 .interaction_response_data(|ird| {
-                    ird.content(format!(
-                        "You chose to draw, result: {:?}, win: {}",
-                        result.0, result.1
-                    ))
-                    .ephemeral(true)
+                    ird.content(format!("You chose to draw, result: {:?}", result))
+                        .ephemeral(true)
                 })
         })
         .await
@@ -212,11 +203,8 @@ async fn handle_say_uno(ctx: &Context, interaction: &MessageComponentInteraction
         .create_interaction_response(ctx, |ir| {
             ir.kind(InteractionResponseType::ChannelMessageWithSource)
                 .interaction_response_data(|ird| {
-                    ird.content(format!(
-                        "You chose to say UNO, result: {:?}, win: {}",
-                        result.0, result.1
-                    ))
-                    .ephemeral(true)
+                    ird.content(format!("You chose to say UNO, result: {:?}", result))
+                        .ephemeral(true)
                 })
         })
         .await
@@ -229,11 +217,8 @@ async fn handle_callout(ctx: &Context, interaction: &MessageComponentInteraction
         .create_interaction_response(ctx, |ir| {
             ir.kind(InteractionResponseType::ChannelMessageWithSource)
                 .interaction_response_data(|ird| {
-                    ird.content(format!(
-                        "You chose do a callout, result: {:?}, win: {}",
-                        result.0, result.1
-                    ))
-                    .ephemeral(true)
+                    ird.content(format!("You chose do a callout, result: {:?}", result))
+                        .ephemeral(true)
                 })
         })
         .await

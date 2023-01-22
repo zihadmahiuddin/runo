@@ -8,6 +8,12 @@ use crate::error::{Result, UnoError};
 use crate::player::Player;
 use crate::turn::{PlayAction, TurnAction, TurnActionResult};
 
+#[derive(Debug, PartialEq)]
+pub struct PlayTurnResult {
+    pub turn_action_result: TurnActionResult,
+    pub won: bool,
+}
+
 #[derive(Debug)]
 pub struct Uno {
     deck: Deck,
@@ -79,7 +85,7 @@ impl Uno {
         })
     }
 
-    pub fn play_turn(&mut self, turn_action: TurnAction) -> (TurnActionResult, bool) {
+    pub fn play_turn(&mut self, turn_action: TurnAction) -> PlayTurnResult {
         let current_turn_player_id = self.get_current_turn_player_id();
 
         let player = self
@@ -172,7 +178,10 @@ impl Uno {
             );
         }
 
-        (turn_action_result, won)
+        PlayTurnResult {
+            turn_action_result,
+            won,
+        }
     }
 
     pub fn get_player_ids(&self) -> Vec<u64> {

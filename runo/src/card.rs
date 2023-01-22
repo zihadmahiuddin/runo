@@ -37,7 +37,7 @@ pub enum Card {
     WildDraw,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PlayedCard {
     Colored(CardColor, ColoredCard),
     Wild(CardColor),

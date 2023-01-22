@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use runo::{
     card::{Card, CardColor, ColoredCard, PlayedCard},
     turn::{PlayAction, TurnAction, TurnActionResult},
-    uno::Uno,
+    uno::{PlayTurnResult, Uno},
 };
 
 fn create_player_names(count: usize) -> Vec<String> {
@@ -37,7 +37,13 @@ fn play_turn_works_if_card_in_hand() {
         Card::Colored(CardColor::Red, ColoredCard::Number(1)),
     )));
 
-    assert_eq!(turn_action_result, (TurnActionResult::Neutral, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::Neutral,
+            won: false
+        }
+    );
 
     assert!(matches!(
         uno.get_last_played_card(),
@@ -71,7 +77,13 @@ fn play_turn_fails_if_card_not_in_hand() {
         Card::Colored(CardColor::Red, ColoredCard::Number(1)),
     )));
 
-    assert_eq!(turn_action_result, (TurnActionResult::CardNotInHand, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::CardNotInHand,
+            won: false
+        }
+    );
 
     let last_played_card = uno.get_last_played_card();
 
@@ -103,7 +115,13 @@ fn play_turn_skips_player_properly() {
 
     assert_eq!(uno.get_current_turn_player_id(), expected_next_player_id);
 
-    assert_eq!(turn_action_result, (TurnActionResult::Skip, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::Skip,
+            won: false
+        }
+    );
 
     assert!(matches!(
         uno.get_last_played_card(),
@@ -133,7 +151,13 @@ fn play_turn_performs_reverse_properly() {
         Card::Colored(CardColor::Green, ColoredCard::Reverse),
     )));
 
-    assert_eq!(turn_action_result, (TurnActionResult::Reverse, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::Reverse,
+            won: false
+        }
+    );
 
     assert!(matches!(
         uno.get_last_played_card(),
@@ -164,7 +188,13 @@ fn play_turn_performs_draw_properly() {
         Card::Colored(CardColor::Green, ColoredCard::Draw),
     )));
 
-    assert_eq!(turn_action_result, (TurnActionResult::Draw, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::Draw,
+            won: false
+        }
+    );
 
     assert!(matches!(
         uno.get_last_played_card(),
@@ -201,7 +231,13 @@ fn play_turn_performs_wild_properly() {
 
     let turn_action_result = uno.play_turn(TurnAction::Play(PlayAction::Wild(CardColor::Red)));
 
-    assert_eq!(turn_action_result, (TurnActionResult::Wild, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::Wild,
+            won: false
+        }
+    );
 
     assert!(matches!(
         uno.get_last_played_card(),
@@ -233,7 +269,13 @@ fn play_turn_performs_wild_draw_properly() {
     let turn_action_result =
         uno.play_turn(TurnAction::Play(PlayAction::WildDraw(CardColor::Yellow)));
 
-    assert_eq!(turn_action_result, (TurnActionResult::WildDraw, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::WildDraw,
+            won: false
+        }
+    );
 
     assert!(matches!(
         uno.get_last_played_card(),
@@ -263,7 +305,13 @@ fn turn_uno_works_if_only_one_card() {
 
     let turn_action_result = uno.play_turn(TurnAction::Uno);
 
-    assert_eq!(turn_action_result, (TurnActionResult::UnoSuccessful, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::UnoSuccessful,
+            won: false
+        }
+    );
 }
 
 #[test]
@@ -278,7 +326,13 @@ fn turn_uno_does_not_work_if_more_than_one_card() {
 
     let turn_action_result = uno.play_turn(TurnAction::Uno);
 
-    assert_eq!(turn_action_result, (TurnActionResult::UnoFailed, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::UnoFailed,
+            won: false
+        }
+    );
 }
 
 #[test]
@@ -295,7 +349,10 @@ fn turn_callout_works_if_players_eligible() {
 
     assert_eq!(
         turn_action_result,
-        (TurnActionResult::CalledOut(vec![1, 2]), false)
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::CalledOut(vec![1, 2]),
+            won: false
+        }
     );
 }
 
@@ -305,7 +362,13 @@ fn turn_callout_does_not_work_if_no_players_eligible() {
 
     let turn_action_result = uno.play_turn(TurnAction::Callout);
 
-    assert_eq!(turn_action_result, (TurnActionResult::CalloutFailed, false));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::CalloutFailed,
+            won: false
+        }
+    );
 }
 
 #[test]
@@ -336,5 +399,11 @@ fn turn_winning_works_properly() {
         .expect("Current player must exist.");
     assert_eq!(player.cards_count(), 0);
 
-    assert_eq!(turn_action_result, (TurnActionResult::Skip, true));
+    assert_eq!(
+        turn_action_result,
+        PlayTurnResult {
+            turn_action_result: TurnActionResult::Skip,
+            won: true
+        }
+    );
 }
