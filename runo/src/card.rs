@@ -3,7 +3,7 @@ use std::fmt::Display;
 
 use strum_macros::{Display, EnumCount as EnumCountMacro, EnumIter, EnumString};
 
-#[derive(Clone, Debug, Display, EnumString, EnumCountMacro, EnumIter, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Display, EnumString, EnumCountMacro, EnumIter, PartialEq, Eq)]
 pub enum CardColor {
     Red,
     Green,
@@ -42,6 +42,16 @@ pub enum PlayedCard {
     Colored(CardColor, ColoredCard),
     Wild(CardColor),
     WildDraw(CardColor),
+}
+
+impl PlayedCard {
+    pub fn color(&self) -> CardColor {
+        match self {
+            PlayedCard::Colored(color, _) => *color,
+            PlayedCard::Wild(color) => *color,
+            PlayedCard::WildDraw(color) => *color,
+        }
+    }
 }
 
 impl Display for Card {
