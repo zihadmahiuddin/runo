@@ -87,7 +87,7 @@ fn play_turn_fails_if_card_not_in_hand() {
 
     let last_played_card = uno.get_last_played_card();
 
-    assert!(matches!(last_played_card, last_played_card_before));
+    assert_eq!(last_played_card, &last_played_card_before);
 }
 
 #[test]
