@@ -1,11 +1,12 @@
 use std::collections::{BTreeMap, HashSet};
 
-use poise::serenity_prelude::UserId;
-use runo::error::UnoError;
+use poise::serenity_prelude::{UserId, ReactionType};
+use runo::{error::UnoError, card::{CardColor, Card}};
 
 use crate::{commands::uno::button::UnoButton, Context, Error, UnoGame};
 
 pub mod button;
+pub mod select_menu;
 
 #[poise::command(slash_command, prefix_command, subcommands("create", "join", "start"))]
 pub async fn uno(_ctx: Context<'_>) -> Result<(), Error> {
@@ -162,6 +163,30 @@ pub async fn start(ctx: Context<'_>) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+pub trait AsEmoji {
+    fn as_emoji(&self) -> ReactionType;
+}
+
+impl AsEmoji for CardColor {
+    fn as_emoji(&self) -> ReactionType {
+        match self {
+            CardColor::Red => ReactionType::Unicode("🟥".to_string()),
+            CardColor::Green => ReactionType::Unicode("🟩".to_string()),
+            CardColor::Blue => ReactionType::Unicode("🟦".to_string()),
+            CardColor::Yellow => ReactionType::Unicode("🟨".to_string()),
+        }
+    }
+}
+
+impl AsEmoji for Card {
+    fn as_emoji(&self) -> ReactionType {
+        match self {
+            Card::Colored(color, _) => color.as_emoji(),
+            _ => ReactionType::Unicode("⬛".to_string()),
+        }
+    }
 }
 
 enum CreateMatchResult {
