@@ -53,12 +53,12 @@ impl Display for Card {
                         ColoredCard::Number(number) => number.to_string(),
                         ColoredCard::Skip => "Skip".to_string(),
                         ColoredCard::Reverse => "Reverse".to_string(),
-                        ColoredCard::Draw => "Draw".to_string(),
+                        ColoredCard::Draw => "Draw (+2)".to_string(),
                     }
                 })
             }
             Card::Wild => write!(f, "Wild"),
-            Card::WildDraw => write!(f, "Wild Draw"),
+            Card::WildDraw => write!(f, "Wild Draw (+4)"),
         }
     }
 }
@@ -106,13 +106,13 @@ mod tests {
     #[test]
     fn return_correct_string_for_draw_card() {
         let red_draw = Card::Colored(CardColor::Red, ColoredCard::Draw);
-        assert_eq!(red_draw.to_string(), "Red Draw");
+        assert_eq!(red_draw.to_string(), "Red Draw (+2)");
 
         let yellow_draw = Card::Colored(CardColor::Yellow, ColoredCard::Draw);
-        assert_eq!(yellow_draw.to_string(), "Yellow Draw");
+        assert_eq!(yellow_draw.to_string(), "Yellow Draw (+2)");
 
         let blue_draw = Card::Colored(CardColor::Blue, ColoredCard::Draw);
-        assert_eq!(blue_draw.to_string(), "Blue Draw");
+        assert_eq!(blue_draw.to_string(), "Blue Draw (+2)");
     }
 
     #[test]
@@ -124,6 +124,6 @@ mod tests {
     #[test]
     fn return_correct_string_for_wild_draw_card() {
         let wild_draw = Card::WildDraw;
-        assert_eq!(wild_draw.to_string(), "Wild Draw");
+        assert_eq!(wild_draw.to_string(), "Wild Draw (+4)");
     }
 }
