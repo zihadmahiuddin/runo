@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, fmt::Debug};
 
-use rand::{seq::IteratorRandom, thread_rng, Rng};
+use rand::{thread_rng, Rng};
 
 use crate::card::{Card, ColoredCard, PlayedCard};
 use crate::deck::Deck;

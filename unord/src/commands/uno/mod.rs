@@ -1,7 +1,10 @@
 use std::collections::{BTreeMap, HashSet};
 
-use poise::serenity_prelude::{UserId, ReactionType};
-use runo::{error::UnoError, card::{CardColor, Card}};
+use poise::serenity_prelude::{ReactionType, UserId};
+use runo::{
+    card::{Card, CardColor},
+    error::UnoError,
+};
 
 use crate::{commands::uno::button::UnoButton, Context, Error, UnoGame};
 
