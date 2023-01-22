@@ -70,13 +70,32 @@ impl UnoButton {
 
         match game {
             UnoGame::Pending { .. } => todo!(),
-            UnoGame::Ongoing { game, .. } => match button_type {
-                Self::PlayCard => handle_play_card(ctx, interaction, game).await,
-                Self::ViewHand => handle_view_hand(ctx, interaction, game).await,
-                Self::Draw => handle_draw(ctx, interaction, game).await,
-                Self::Uno => handle_say_uno(ctx, interaction, game).await,
-                Self::Callout => handle_callout(ctx, interaction, game).await,
-            },
+            UnoGame::Ongoing { game, .. } => {
+                // Let players view their cards any time
+                if !matches!(button_type, Self::ViewHand) {
+                    let current_player_id = game.get_current_turn_player_id();
+                    if current_player_id != interaction.user.id.0 {
+                        interaction
+                            .create_interaction_response(ctx, |ir| {
+                                ir.kind(InteractionResponseType::ChannelMessageWithSource)
+                                    .interaction_response_data(|ird| {
+                                        ird.ephemeral(true).content("Please wait for your turn.")
+                                    })
+                            })
+                            .await
+                            .unwrap();
+                        return;
+                    }
+                }
+
+                match button_type {
+                    Self::PlayCard => handle_play_card(ctx, interaction, game).await,
+                    Self::ViewHand => handle_view_hand(ctx, interaction, game).await,
+                    Self::Draw => handle_draw(ctx, interaction, game).await,
+                    Self::Uno => handle_say_uno(ctx, interaction, game).await,
+                    Self::Callout => handle_callout(ctx, interaction, game).await,
+                }
+            }
         };
     }
 
