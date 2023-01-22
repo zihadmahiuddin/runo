@@ -18,7 +18,7 @@ pub struct PlayTurnResult {
 pub struct Uno {
     deck: Deck,
     players: BTreeMap<u64, Player>,
-    winners: Vec<Player>,
+    winners: BTreeMap<u64, Player>,
     current_turn_player_id_index: usize,
     player_order_reversed: bool,
     last_played_card: PlayedCard,
@@ -61,7 +61,7 @@ impl Uno {
             players.insert(player_id, player);
         }
 
-        let winners = Vec::with_capacity(players.len());
+        let winners = BTreeMap::new();
 
         let _player_ids = players.keys().copied().collect::<Vec<_>>();
         // let current_turn_player_id_index = thread_rng().gen_range(0..player_ids.len());
@@ -171,7 +171,8 @@ impl Uno {
 
         let won = player.cards_count() == 0;
         if won {
-            self.winners.push(
+            self.winners.insert(
+                current_turn_player_id,
                 self.players
                     .remove(&current_turn_player_id)
                     .expect("The player just won."),
@@ -194,6 +195,18 @@ impl Uno {
 
     pub fn get_player_mut(&mut self, player_id: &u64) -> Option<&mut Player> {
         self.players.get_mut(player_id)
+    }
+
+    pub fn get_winner_ids(&self) -> Vec<u64> {
+        self.winners.keys().copied().collect()
+    }
+
+    pub fn get_winner(&self, player_id: &u64) -> Option<&Player> {
+        self.winners.get(player_id)
+    }
+
+    pub fn get_winner_mut(&mut self, player_id: &u64) -> Option<&mut Player> {
+        self.winners.get_mut(player_id)
     }
 
     pub fn get_current_turn_player_id(&self) -> u64 {

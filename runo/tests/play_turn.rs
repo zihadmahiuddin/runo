@@ -394,10 +394,10 @@ fn turn_winning_works_properly() {
         Card::Colored(color, ColoredCard::Skip),
     )));
 
-    let player = uno
-        .get_player_mut(&current_player_id)
+    let winner = uno
+        .get_winner(&current_player_id)
         .expect("Current player must exist.");
-    assert_eq!(player.cards_count(), 0);
+    assert_eq!(winner.cards_count(), 0);
 
     assert_eq!(
         turn_action_result,
