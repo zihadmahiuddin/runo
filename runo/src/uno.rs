@@ -252,7 +252,7 @@ impl Uno {
                 continue;
             }
 
-            if player.cards_count() == 1 {
+            if player.cards_count() == 1 && !player.uno_performed {
                 called_out_player_ids.push(player.id);
             }
         }

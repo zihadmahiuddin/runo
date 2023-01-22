@@ -6,7 +6,7 @@ pub struct Player {
     pub id: u64,
     name: String,
     pub hand: Vec<Card>,
-    uno_performed: bool,
+    pub uno_performed: bool,
 }
 
 impl Player {
