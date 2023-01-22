@@ -103,9 +103,10 @@ async fn handle_play_card(
 
     let player_cards = player.hand.clone();
     let mut card_select_menu = CardSelectMenu::new(player_cards.as_slice());
-    card_select_menu
+    let interaction = card_select_menu
         .await_selection(ctx, interaction)
         .await
+        .unwrap()
         .unwrap();
 
     let chosen_card = card_select_menu.get_selection().unwrap();
@@ -133,7 +134,7 @@ async fn handle_play_card(
 
             let mut color_select_menu = ColorSelectMenu::new(&colors);
             color_select_menu
-                .await_selection(ctx, interaction)
+                .await_selection(ctx, &interaction)
                 .await
                 .unwrap();
             let color = color_select_menu.get_selection().unwrap();
