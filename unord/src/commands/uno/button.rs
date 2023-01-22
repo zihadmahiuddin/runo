@@ -23,7 +23,7 @@ pub enum UnoButton {
     PlayCard,
     ViewHand,
     Draw,
-    UNO,
+    Uno,
     Callout,
 }
 
@@ -74,25 +74,20 @@ impl UnoButton {
                 Self::PlayCard => handle_play_card(ctx, interaction, game).await,
                 Self::ViewHand => handle_view_hand(ctx, interaction, game).await,
                 Self::Draw => handle_draw(ctx, interaction, game).await,
-                Self::UNO => handle_say_uno(ctx, interaction, game).await,
+                Self::Uno => handle_say_uno(ctx, interaction, game).await,
                 Self::Callout => handle_callout(ctx, interaction, game).await,
             },
         };
     }
 
     pub async fn handle_event<'a>(ctx: &Context, event: &Event<'_>, data: &Data) {
-        match event {
-            Event::InteractionCreate { interaction } => match interaction {
-                Interaction::MessageComponent(component_interaction) => match component_interaction
-                    .data
-                    .component_type
-                {
-                    ComponentType::Button => Self::process(ctx, component_interaction, data).await,
-                    _ => {}
-                },
-                _ => {}
-            },
-            _ => {}
+        if let Event::InteractionCreate {
+            interaction: Interaction::MessageComponent(component_interaction),
+        } = event
+        {
+            if let ComponentType::Button = component_interaction.data.component_type {
+                Self::process(ctx, component_interaction, data).await
+            }
         }
     }
 }

@@ -84,10 +84,10 @@ impl<'cards> CardSelectMenu<'cards> {
 #[async_trait]
 impl<'cards> SelectMenu<&'cards Card> for CardSelectMenu<'cards> {
     fn custom_id() -> String {
-        format!("select_menu_card")
+        "select_menu_card".to_string()
     }
 
-    fn on_collected(&mut self, selections: &[String]) -> () {
+    fn on_collected(&mut self, selections: &[String]) {
         if let Some(selected_index) = selections
             .iter()
             .find_map(|str_selection| str_selection.parse::<usize>().ok())
@@ -98,8 +98,7 @@ impl<'cards> SelectMenu<&'cards Card> for CardSelectMenu<'cards> {
 
     fn get_selection(&self) -> Option<&'cards Card> {
         self.selected_index
-            .map(|index| self.available_cards.get(index))
-            .flatten()
+            .and_then(|index| self.available_cards.get(index))
     }
 
     fn create_interaction_response_data<'a>(
@@ -163,10 +162,10 @@ impl<'cards> ColorSelectMenu<'cards> {
 #[async_trait]
 impl<'cards> SelectMenu<&'cards CardColor> for ColorSelectMenu<'cards> {
     fn custom_id() -> String {
-        format!("select_menu_card_color")
+        "select_menu_card_color".to_string()
     }
 
-    fn on_collected(&mut self, selections: &[String]) -> () {
+    fn on_collected(&mut self, selections: &[String]) {
         if let Some(selected_index) = selections
             .iter()
             .find_map(|str_selection| str_selection.parse::<usize>().ok())
@@ -177,8 +176,7 @@ impl<'cards> SelectMenu<&'cards CardColor> for ColorSelectMenu<'cards> {
 
     fn get_selection(&self) -> Option<&'cards CardColor> {
         self.selected_index
-            .map(|index| self.available_colors.get(index))
-            .flatten()
+            .and_then(|index| self.available_colors.get(index))
     }
 
     fn create_interaction_response_data<'a>(
