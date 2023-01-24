@@ -37,6 +37,25 @@ pub enum Card {
     WildDraw,
 }
 
+impl Display for Card {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Card::Colored(color, card) => {
+                write!(f, "{} {}", color, {
+                    match card {
+                        ColoredCard::Number(number) => number.to_string(),
+                        ColoredCard::Skip => "Skip".to_string(),
+                        ColoredCard::Reverse => "Reverse".to_string(),
+                        ColoredCard::Draw => "Draw (+2)".to_string(),
+                    }
+                })
+            }
+            Card::Wild => write!(f, "Wild"),
+            Card::WildDraw => write!(f, "Wild Draw (+4)"),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum PlayedCard {
     Colored(CardColor, ColoredCard),
@@ -54,21 +73,12 @@ impl PlayedCard {
     }
 }
 
-impl Display for Card {
+impl Display for PlayedCard {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Card::Colored(color, card) => {
-                write!(f, "{} {}", color, {
-                    match card {
-                        ColoredCard::Number(number) => number.to_string(),
-                        ColoredCard::Skip => "Skip".to_string(),
-                        ColoredCard::Reverse => "Reverse".to_string(),
-                        ColoredCard::Draw => "Draw (+2)".to_string(),
-                    }
-                })
-            }
-            Card::Wild => write!(f, "Wild"),
-            Card::WildDraw => write!(f, "Wild Draw (+4)"),
+            PlayedCard::Colored(color, card) => write!(f, "{} {}", color, card),
+            PlayedCard::Wild(color) => write!(f, "{} Wild", color),
+            PlayedCard::WildDraw(color) => write!(f, "{} Wild Draw (+4)", color),
         }
     }
 }
